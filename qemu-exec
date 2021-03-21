@@ -1,0 +1,42 @@
+#!/bin/sh -eu
+dir="$(dirname -- "$0")"
+
+quote() {
+  set -- "$(printf "%s." "$1" | sed "s/'/'\\\\''/g")"
+  printf "'%s'\n" "${1%.}"
+}
+
+if ! test -f "$dir/kernel" || ! test -f "$dir/initrd"; then
+  "$dir/build"
+fi
+
+set -- "$PWD" "$@"
+cmdline="quiet --$(printf ' "%s"' "$@")"
+
+tmp_script=""
+raw="$*"
+if test "${raw#*\"}" != "$raw" || test "$(printf "%s" "$cmdline" | wc -c)" -gt 2047; then
+  quoted="cd $(quote "$1") && exec"
+  shift
+  for arg; do
+    quoted="$quoted $(quote "$arg")"
+  done
+  tmp_script="$(mktemp)"
+  printf "%s\n" "$quoted" >"$tmp_script"
+  set -- "/" "/proc/self/exe" "$tmp_script"
+  cmdline="quiet --$(printf ' "%s"' "$@")"
+fi
+
+raw="$*"
+if test "${raw#*\"}" != "$raw" || test "$(printf "%s" "$cmdline" | wc -c)" -gt 2047; then
+  exit 1
+fi
+
+exec qemu-system-x86_64 \
+  -kernel "$dir/kernel" -initrd "$dir/initrd" \
+  -append "$cmdline" \
+  -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
+  -serial stdio -display none -vga none \
+  -device virtio-rng-pci \
+  -m 512M \
+  -enable-kvm -cpu host # -smp "$(nproc)"
