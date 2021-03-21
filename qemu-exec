@@ -1,5 +1,5 @@
 #!/bin/sh -eu
-dir="$(dirname -- "$0")"
+dir="$(dirname -- "$(readlink -f "$0")")"
 
 quote() {
   printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
