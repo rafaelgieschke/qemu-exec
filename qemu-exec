@@ -2,8 +2,7 @@
 dir="$(dirname -- "$0")"
 
 quote() {
-  set -- "$(printf "%s." "$1" | sed "s/'/'\\\\''/g")"
-  printf "'%s'\n" "${1%.}"
+  printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
 }
 
 if ! test -f "$dir/kernel" || ! test -f "$dir/initrd"; then
