@@ -2,4 +2,4 @@
 dir="$(dirname -- "$0")"
 
 docker build "$dir"
-docker image save "$(docker build -q "$dir")" | tar x -O --wildcards "*/layer.tar" | tar x
+docker image save "$(docker build -q "$dir")" | tar x -O --wildcards "*/layer.tar" | tar -C "$dir" x
