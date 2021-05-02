@@ -8,7 +8,13 @@ mount -t devtmpfs devtmpfs /mnt/dev
 mount -t proc proc /mnt/proc
 mount -t sysfs sysfs /mnt/sys
 
+while test "$1" != "=="; do shift; done
+shift
+poweroff_cmd="$1"
+shift
+
+set +e
 chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
 echo EXIT STATUS: "$?"
 
-exec poweroff -f
+exec "$poweroff_cmd" -f

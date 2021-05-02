@@ -1,41 +1,90 @@
 #!/bin/sh -eu
 dir="$(dirname -- "$(readlink -f "$0")")"
 
+: "${USE_LKVM:=}"
+
 quote() {
   printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
+}
+
+get_cmdline() {
+  for arg; do shift && test "$arg" = "--" && break; done
+  for arg; do
+    case "$arg" in
+    *\"*) return ;;
+    esac
+  done
+  if test "$(($# + 3))" -gt "$max_cmdline_args"; then return; fi
+  # Use == as delimiter to command-line parameters not recognized
+  # by the kernel before the -- delimiter, which are also passed to init.
+  # A potential == before the -- delimiter would be passed as environment
+  # variable ("=") to init and can thus be distinguished.
+  set -- "quiet -- ==$(printf ' "%s"' "$poweroff_cmd" "$working_dir" "$@")"
+  if test "$(printf "%s" "$1" | wc -c)" -gt "$max_cmdline_size"; then return; fi
+  printf "%s\n" "$1"
+}
+
+get_script() {
+  for arg; do shift && test "$arg" = "--" && break; done
+  quoted="cd $(quote "$working_dir") && exec"
+  for arg; do
+    quoted="$quoted $(quote "$arg")"
+  done
+  printf "%s\n" "$quoted"
 }
 
 if ! test -f "$dir/kernel" || ! test -f "$dir/initrd"; then
   "$dir/build"
 fi
 
-set -- "$PWD" "$@"
-cmdline="quiet --$(printf ' "%s"' "$@")"
+poweroff_cmd="poweroff"
+max_cmdline_size=2047
+# See Linux kernels's INIT_ENV_ARG_LIMIT
+max_cmdline_args=32
+
+if test "$USE_LKVM"; then
+  poweroff_cmd="reboot"
+  # lkvm sets some additional command-line parameters, some of which
+  # are not recognized by the kernel and passed to init.
+  max_cmdline_size=1023
+  max_cmdline_args=16
+fi
+
+working_dir="$PWD"
+cmdline="$(get_cmdline "$@")"
 
 tmp_script=""
-raw="$*"
-if test "${raw#*\"}" != "$raw" || test "$(printf "%s" "$cmdline" | wc -c)" -gt 2047; then
-  quoted="cd $(quote "$1") && exec"
-  shift
-  for arg; do
-    quoted="$quoted $(quote "$arg")"
-  done
+if ! test "$cmdline"; then
   tmp_script="$(mktemp)"
-  printf "%s\n" "$quoted" >"$tmp_script"
-  set -- "/" "/proc/self/exe" "$tmp_script"
-  cmdline="quiet --$(printf ' "%s"' "$@")"
+  get_script "$@" >"$tmp_script"
+  working_dir="/"
+  cmdline="$(get_cmdline "--" "/proc/self/exe" "$tmp_script")"
+  if ! test "$cmdline"; then exit 1; fi
 fi
 
-raw="$*"
-if test "${raw#*\"}" != "$raw" || test "$(printf "%s" "$cmdline" | wc -c)" -gt 2047; then
-  exit 1
-fi
+i=0
+for arg; do
+  if test "$i" = "0"; then set --; fi
+  if test "$arg" = "--"; then break; fi
+  set -- "$@" "$arg"
+  i="$((i + 1))"
+done
 
-exec qemu-system-x86_64 \
-  -kernel "$dir/kernel" -initrd "$dir/initrd" \
-  -append "$cmdline" \
-  -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
-  -serial stdio -display none -vga none \
-  -device virtio-rng-pci \
-  -m 512M \
-  -enable-kvm -cpu host # -smp "$(nproc)"
+if test "${USE_LKVM:-}"; then
+  exec lkvm run \
+    --kernel "$dir/kernel" --initrd "$dir/initrd" \
+    --params "$cmdline" \
+    --9p /,mnt \
+    --rng \
+    -m 512 \
+    "$@"
+else
+  exec qemu-system-x86_64 \
+    -kernel "$dir/kernel" -initrd "$dir/initrd" \
+    -append "$cmdline" \
+    -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
+    -serial stdio -display none -vga none \
+    -device virtio-rng-pci \
+    -m 512M \
+    "$@"
+fi
