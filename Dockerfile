@@ -7,7 +7,7 @@ RUN basename -- /lib/modules/* > version \
   && cp -v "/boot/vmlinuz-$(cat version)" kernel \
   && cp -v "/boot/config-$(cat version)" config
 
-ARG modules="loop iso9660"
+ARG modules="loop iso9660 fuse"
 WORKDIR /modules
 RUN for module in $modules; do modprobe -DS "$(cat /kernel/version)" "$module" \
   | sed "s/^builtin /# &/" >> init-insmod; done \
