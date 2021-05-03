@@ -17,4 +17,7 @@ set +e
 chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
 echo EXIT STATUS: "$?"
 
+mkdir -p /proc
+mount -t proc proc /proc
+umount -a -r -d 2>&1 | grep -v "can't unmount /:" >&2
 exec "$poweroff_cmd" -f
