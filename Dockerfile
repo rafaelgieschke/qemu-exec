@@ -19,7 +19,7 @@ COPY init /init
 
 
 FROM ubuntu as image
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y cpio grub2 xorriso
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y cpio grub2 grub-efi-amd64-bin xorriso mtools
 
 WORKDIR /output
 COPY --from=kernel /kernel .
