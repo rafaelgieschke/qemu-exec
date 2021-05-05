@@ -17,8 +17,10 @@ WORKDIR /modules
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/modules.order" .
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/modules.builtin" .
 RUN modprobe -aDS "$(cat /kernel/version)" $modules_load \
-  | awk '!seen[$0]++' | sed "s/^builtin /# &/" >> init-insmod \
-  && cp -v --parents $(sed "/^#/d;s/^insmod //" init-insmod) .
+  | awk '!seen[$0]++' | sed "s/^builtin /# &/;s/^insmod //" >> /tmp/modules \
+  && cp -v --parents $(sed "/^#/d" /tmp/modules) . \
+  && mkdir -p etc \
+  && sed -E 's/^[^#].+\///;s/\.ko\s*$//' /tmp/modules > etc/modules
 RUN modprobe -aDS "$(cat /kernel/version)" $modules \
   | awk '!seen[$0]++' | sed "s/^builtin /# &/" \
   | sed "/^#/d;s/^insmod //" \

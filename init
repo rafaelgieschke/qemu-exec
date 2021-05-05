@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 
-test -f /init-insmod && . /init-insmod
+test -f /etc/modules && xargs -r -n 1 modprobe < /etc/modules
 
 mkdir -p /mnt
 mount -t 9p -o trans=virtio,version=9p2000.L mnt /mnt
