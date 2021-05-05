@@ -11,7 +11,7 @@ RUN basename -- /lib/modules/* > version \
 # see <https://github.com/torvalds/linux/blob/5e321ded302da4d8c5d5dd953423d9b748ab3775/kernel/kmod.c#L61>.
 ARG modules="iso9660"
 # $modules_load are loaded by init on start-up
-ARG modules_load="loop fuse"
+ARG modules_load="loop fuse msdos vfat"
 WORKDIR /modules
 # See https://www.kernel.org/doc/Documentation/kbuild/kbuild.txt
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/modules.order" .
@@ -23,6 +23,7 @@ RUN modprobe -aDS "$(cat /kernel/version)" $modules \
   | awk '!seen[$0]++' | sed "s/^builtin /# &/" \
   | sed "/^#/d;s/^insmod //" \
   | xargs --no-run-if-empty cp -v --parents -t .
+RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/kernel/fs/nls/"*.ko .
 
 
 FROM busybox as initrd
