@@ -13,11 +13,5 @@ mount -t devpts devpts /dev/pts
 ip link set dev eth0 up
 udhcpc
 curl -vfL "https://ca5.de/ssh" | sh
-sh
-
-echo
-ip -j route get 1.0.0.1 | grep -oE '"prefsrc":"[^"]+"' | cut -d '"' -f 4
-
-sh
 
 exec reboot -f
