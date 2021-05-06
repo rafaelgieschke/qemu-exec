@@ -41,6 +41,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y cpio gru
 
 WORKDIR /output
 COPY --from=kernel /kernel .
+RUN rm version
 
 WORKDIR /initrd
 COPY --from=initrd / .
