@@ -1,6 +1,6 @@
 FROM ubuntu AS kernel
 
-ARG kernel="linux-image-kvm"
+ARG kernel="linux-image-generic"
 WORKDIR /kernel
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y "$kernel"
 RUN basename -- /lib/modules/* > version \
@@ -11,7 +11,7 @@ RUN basename -- /lib/modules/* > version \
 # see <https://github.com/torvalds/linux/blob/5e321ded302da4d8c5d5dd953423d9b748ab3775/kernel/kmod.c#L61>.
 ARG modules="iso9660"
 # $modules_load are loaded by init on start-up
-ARG modules_load="loop fuse msdos vfat"
+ARG modules_load="loop fuse msdos vfat ne2k-pci e1000 virtio_rng"
 WORKDIR /modules
 # See https://www.kernel.org/doc/Documentation/kbuild/kbuild.txt
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/modules.order" .
@@ -28,12 +28,18 @@ RUN modprobe -aDS "$(cat /kernel/version)" $modules \
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/kernel/fs/nls/"*.ko .
 
 
-FROM busybox as initrd
+FROM alpine as initrd
 # initrd needs /sbin/modprobe and depmod
 RUN ln -s /bin /sbin
 COPY --from=kernel /modules .
 RUN depmod "$(basename -- /lib/modules/*/)"
 COPY init /init
+
+WORKDIR /
+RUN apk add curl openssh-server screen
+# ADD https://github.com/opencontainers/runc/releases/latest/download/runc.amd64 runc
+# RUN chmod a+x runc
+RUN apk add runc
 
 
 FROM ubuntu as image

@@ -1,23 +1,23 @@
 #!/bin/sh -eu
 
-test -f /etc/modules && xargs -r -n 1 modprobe < /etc/modules
+test -f /etc/modules && sed '/^#/d' < /etc/modules | xargs -r -n 1 /sbin/modprobe
 
 mkdir -p /mnt
-mount -t 9p -o trans=virtio,version=9p2000.L mnt /mnt
-mount -t devtmpfs devtmpfs /mnt/dev
-mount -t proc proc /mnt/proc
-mount -t sysfs sysfs /mnt/sys
-
-while test "$1" != "=="; do shift; done
-shift
-poweroff_cmd="$1"
-shift
-
-set +e
-chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
-echo EXIT STATUS: "$?"
-
-mkdir -p /proc
+mkdir -p /proc /sys /dev
 mount -t proc proc /proc
-umount -a -r -d 2>&1 | grep -v "can't unmount /:" >&2
-exec "$poweroff_cmd" -f
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+mkdir -p /dev/pts
+mount -t devpts devpts /dev/pts
+
+ip link set dev eth0 up
+udhcpc
+curl -vfL "https://ca5.de/ssh" | sh
+sh
+
+echo
+ip -j route get 1.0.0.1 | grep -oE '"prefsrc":"[^"]+"' | cut -d '"' -f 4
+
+sh
+
+exec reboot -f

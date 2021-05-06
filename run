@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# exec qemu-system-x86_64 -display none -vga none -serial stdio \
+exec qemu-system-x86_64 \
+  -m 512M \
+  -cdrom image.iso \
+  -enable-kvm \
+  -device virtio-rng-pci \
+  -device ne2k_pci,netdev=net0 \
+  -netdev user,id=net0,hostfwd=tcp::2222-:22 \
