@@ -67,7 +67,7 @@ for arg; do
   if test "$i" = "0"; then set --; fi
   if test "$arg" = "--"; then break; fi
   set -- "$@" "$arg"
-  i="$((i + 1))"
+  : "$((i += 1))"
 done
 
 if test "${USE_LKVM:-}"; then
