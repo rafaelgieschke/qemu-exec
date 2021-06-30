@@ -9,6 +9,9 @@ quote() {
 
 get_cmdline() {
   for arg; do shift && test "$arg" = "--" && break; done
+  if test "$#" = "0"; then
+    set -- "${SHELL:-sh}"
+  fi
   for arg; do
     case "$arg" in
     *\"*) return ;;
