@@ -2,7 +2,8 @@
 
 test -f /etc/modules && xargs -r -n 1 modprobe < /etc/modules
 
-mkdir -p /mnt
+mkdir -p /mnt /proc
+mount -t proc proc /proc
 mount -t 9p -o trans=virtio,version=9p2000.L mnt /mnt
 mount -t devtmpfs devtmpfs /mnt/dev
 mount -t proc proc /mnt/proc
@@ -17,7 +18,5 @@ set +e
 chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
 echo EXIT STATUS: "$?"
 
-mkdir -p /proc
-mount -t proc proc /proc
 umount -a -r -d 2>&1 | grep -v "can't unmount /:" >&2
 exec "$poweroff_cmd" -f
