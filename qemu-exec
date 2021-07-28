@@ -2,6 +2,7 @@
 dir="$(dirname -- "$(readlink -f "$0")")"
 
 : "${USE_LKVM:=}"
+: "${cmdline:=quiet}"
 
 quote() {
   printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
@@ -22,7 +23,7 @@ get_cmdline() {
   # by the kernel before the -- delimiter, which are also passed to init.
   # A potential == before the -- delimiter would be passed as environment
   # variable ("=") to init and can thus be distinguished.
-  set -- "quiet -- ==$(printf ' "%s"' "$poweroff_cmd" "$working_dir" "$@")"
+  set -- "${cmdline}-- ==$(printf ' "%s"' "$poweroff_cmd" "$working_dir" "$@")"
   if test "$(printf "%s" "$1" | wc -c)" -gt "$max_cmdline_size"; then return; fi
   printf "%s\n" "$1"
 }
@@ -44,6 +45,10 @@ poweroff_cmd="poweroff"
 max_cmdline_size=2047
 # See Linux kernels's INIT_ENV_ARG_LIMIT
 max_cmdline_args=32
+
+if test "$cmdline"; then
+  cmdline="$cmdline "
+fi
 
 if test "$USE_LKVM"; then
   poweroff_cmd="reboot"
