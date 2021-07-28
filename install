@@ -1,0 +1,7 @@
+#!/bin/sh -xeu
+
+cd -- "$(dirname -- "$0")"
+if ! test -f "kernel" || ! test -f "initrd"; then
+  ./build
+fi
+ln -sr qemu-exec qemu-exec-kvm ~/.local/bin/
