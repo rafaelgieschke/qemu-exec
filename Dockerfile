@@ -51,6 +51,7 @@ WORKDIR /image
 RUN ln /output/* .
 RUN mkdir -p boot/grub && printf 'linux /kernel\ninitrd /initrd\nboot\n' > boot/grub/grub.cfg
 RUN grub-mkrescue -o /output/image.iso .
+RUN chmod -R +r /output
 
 FROM scratch
 COPY --from=image /output /
