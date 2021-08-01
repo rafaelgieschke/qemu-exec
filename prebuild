@@ -1,0 +1,9 @@
+#!/bin/sh -xeu
+
+branch="$(git branch --show-current)-prebuilt"
+git branch -D "$branch" || :
+git checkout -b "$branch"
+trap "git checkout @{-1}" EXIT
+./build
+git add -f kernel config initrd
+git commit -m "Build prebuilt version" -m "Command: ./build"
