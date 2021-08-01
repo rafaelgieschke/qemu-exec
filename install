@@ -4,4 +4,5 @@ cd -- "$(dirname -- "$0")"
 if ! test -f "kernel" || ! test -f "initrd"; then
   ./build
 fi
+mkdir -p ~/.local/bin
 ln -sr qemu-exec qemu-exec-kvm ~/.local/bin/
