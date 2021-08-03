@@ -27,6 +27,7 @@ RUN modprobe -aDS "$(cat /kernel/version)" $modules \
   | xargs --no-run-if-empty cp -v --parents -t .
 RUN cp -v --parents "/lib/modules/$(cat /kernel/version)/kernel/fs/nls/"*.ko .
 
+###############################################################################
 
 FROM busybox as initrd
 # initrd needs /sbin/modprobe and depmod
@@ -35,6 +36,7 @@ COPY --from=kernel /modules .
 RUN depmod "$(basename -- /lib/modules/*/)"
 COPY init /init
 
+###############################################################################
 
 FROM ubuntu as image
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y cpio grub2 grub-efi-amd64-bin xorriso mtools
@@ -52,6 +54,8 @@ RUN ln /output/* .
 RUN mkdir -p boot/grub && printf 'linux /kernel\ninitrd /initrd\nboot\n' > boot/grub/grub.cfg
 RUN grub-mkrescue -o /output/image.iso .
 RUN chmod -R +r /output
+
+###############################################################################
 
 FROM scratch
 COPY --from=image /output /
