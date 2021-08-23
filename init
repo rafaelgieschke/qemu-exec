@@ -9,6 +9,8 @@ mount -t devtmpfs devtmpfs /mnt/dev
 mount -t proc proc /mnt/proc
 mount -t sysfs sysfs /mnt/sys
 
+stty nl
+
 while test "$1" != "=="; do shift; done
 shift
 poweroff_cmd="$1"
