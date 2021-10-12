@@ -10,7 +10,7 @@ mount -t proc proc /mnt/proc
 mount -t sysfs sysfs /mnt/sys
 mount -t cgroup2 -o nsdelegate cgroup2 /mnt/sys/fs/cgroup
 
-stty nl
+stty -onlcr
 
 while test "$1" != "=="; do shift; done
 shift
