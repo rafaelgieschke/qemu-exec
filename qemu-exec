@@ -2,6 +2,7 @@
 dir="$(dirname -- "$(readlink -f "$0")")"
 
 : "${vm:=qemu-system-x86_64}"
+: "${vm_is_lkvm="$(test "$(basename -- "${vm##* }")" = "lkvm" && echo 1)"}"
 : "${cmdline=quiet}"
 
 quote() {
@@ -50,7 +51,7 @@ if test "$cmdline"; then
   cmdline="$cmdline "
 fi
 
-if test "$(basename -- "$vm")" = "lkvm"; then
+if test "$vm_is_lkvm"; then
   poweroff_cmd="reboot"
   # lkvm sets some additional command-line parameters, some of which
   # are not recognized by the kernel and passed to init.
@@ -78,8 +79,8 @@ for arg; do
   : "$((i += 1))"
 done
 
-if test "$(basename -- "$vm")" = "lkvm"; then
-  exec "$vm" run \
+if test "$vm_is_lkvm"; then
+  exec $vm run \
     --kernel "$dir/kernel" --initrd "$dir/initrd" \
     --params "$cmdline" \
     --9p /,mnt \
@@ -87,7 +88,7 @@ if test "$(basename -- "$vm")" = "lkvm"; then
     -m 512 \
     "$@"
 else
-  exec "$vm" \
+  exec $vm \
     -kernel "$dir/kernel" -initrd "$dir/initrd" \
     -append "$cmdline" \
     -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
