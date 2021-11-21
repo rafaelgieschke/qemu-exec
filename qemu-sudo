@@ -2,19 +2,17 @@
 
 : "${cmdline=quiet}"
 
-get_args() {
+ARGS="$(
   for arg; do shift && test "$arg" = "--" && break; done
   if test "$#" = "0"; then
     set -- "${SHELL:-sh}"
   fi
-  case "$(printf %s "$PWD" "$@")" in
+  case "$PWD $@" in
     *\"*) exit 2 ;;
-    *\ *) exit 2 ;;
   esac
-  printf "%s\n" "$@"
-}
-
-ARGS="$(get_args "$@")"
+  printf ' "%s"' "$PWD" "$@"
+)"
+if test "$ARGS" = ""; then exit 2; fi
 
 i=0
 for arg; do
@@ -28,5 +26,5 @@ exec qemu-system-x86_64 \
   -serial stdio -display none -vga none \
   -fsdev local,id=root,path=/,security_model=none,multidevs=remap \
   -device virtio-9p-pci,fsdev=root,mount_tag=/dev/root \
-  -append "$cmdline rootfstype=9p rootflags=trans=virtio,version=9p2000.L init=/bin/sh -- -c "'"stty -onlcr; mount -t proc proc /proc; IFS=; cd -- $0; $@; busybox poweroff -f"'" $PWD $ARGS" \
+  -append "$cmdline rootfstype=9p rootflags=trans=virtio,version=9p2000.L init=/bin/sh -- -c "'"stty -onlcr; mount -t proc proc /proc; IFS=; cd -- $0; $@; busybox poweroff -f"'" $ARGS" \
   "$@"
