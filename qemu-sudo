@@ -24,7 +24,7 @@ for arg; do
 done
 
 exec qemu-system-x86_64 \
-  -kernel kernel -device virtio-rng-pci \
+  -kernel "$(dirname -- "$(realpath -- "$0")")/kernel" -device virtio-rng-pci \
   -serial stdio -display none -vga none \
   -fsdev local,id=root,path=/,security_model=none,multidevs=remap \
   -device virtio-9p-pci,fsdev=root,mount_tag=/dev/root \
