@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 
-test -f /etc/modules && xargs -r -n 1 modprobe < /etc/modules
+test -f /etc/modules && sed '/^#/d' /etc/modules | xargs -r -n 1 modprobe
 
 mkdir -p /mnt /proc
 mount -t proc proc /proc
