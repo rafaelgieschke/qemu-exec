@@ -9,7 +9,7 @@ RUN basename -- /lib/modules/* > version \
 
 # $modules are present and loaded on-demand by the kernel using modprobe,
 # see <https://github.com/torvalds/linux/blob/5e321ded302da4d8c5d5dd953423d9b748ab3775/kernel/kmod.c#L61>.
-ARG modules="iso9660"
+ARG modules="iso9660 udf"
 # $modules_load are loaded by init on start-up
 ARG modules_load="loop fuse msdos vfat"
 WORKDIR /modules
