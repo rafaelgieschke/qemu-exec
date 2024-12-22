@@ -1,5 +1,10 @@
 #!/bin/sh -eu
 
+export PATH
+
+mkdir -p /dev
+mount -t devtmpfs devtmpfs /dev
+
 test -f /etc/modules && sed '/^#/d' /etc/modules | xargs -r -n 1 modprobe
 
 mkdir -p /mnt /proc
@@ -21,5 +26,5 @@ set +e
 chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
 echo EXIT STATUS: "$?"
 
-umount -a -r -d 2>&1 | grep -v "can't unmount /:" >&2
+umount -a -r -d 2>&1 | grep -v -e "can't unmount /:" -e " /: not mounted" >&2
 exec "$poweroff_cmd" -f

@@ -3,7 +3,9 @@ dir="$(dirname -- "$(readlink -f "$0")")"
 
 : "${vm:=qemu-system-x86_64}"
 : "${vm_is_lkvm="$(test "$(basename -- "${vm##* }")" = "lkvm" && echo 1)"}"
-: "${cmdline=quiet}"
+: "${cmdline=quiet console=ttyS0}"
+: "${kernel:="$dir/kernel"}"
+: "${initrd:="$dir/initrd"}"
 
 quote() {
   printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
@@ -81,7 +83,7 @@ done
 
 if test "$vm_is_lkvm"; then
   exec $vm run \
-    --kernel "$dir/kernel" --initrd "$dir/initrd" \
+    --kernel "$kernel" --initrd "$initrd" \
     --params "$cmdline" \
     --9p /,mnt \
     --rng \
@@ -89,7 +91,7 @@ if test "$vm_is_lkvm"; then
     "$@"
 else
   exec $vm \
-    -kernel "$dir/kernel" -initrd "$dir/initrd" \
+    -kernel "$kernel" -initrd "$initrd" \
     -append "$cmdline" \
     -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
     -serial stdio -display none -vga none \
