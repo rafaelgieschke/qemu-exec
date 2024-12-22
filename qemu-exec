@@ -90,7 +90,7 @@ if test "$vm_is_lkvm"; then
     -m 512 \
     "$@"
 else
-  exec $vm \
+  exec $vm -M q35 \
     -kernel "$kernel" -initrd "$initrd" \
     -append "$cmdline" \
     -virtfs local,path=/,mount_tag=mnt,security_model=none,multidevs=remap \
