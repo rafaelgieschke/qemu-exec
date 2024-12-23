@@ -23,7 +23,7 @@ poweroff_cmd="$1"
 shift
 
 set +e
-chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
+setsid -c chroot /mnt ../bin/sh -c 'cd -- "$0"; exec "$@"' "$@"
 echo EXIT STATUS: "$?"
 
 umount -a -r -d 2>&1 | grep -v -e "can't unmount /:" -e " /: not mounted" >&2
