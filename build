@@ -2,4 +2,12 @@
 dir="$(dirname -- "$0")"
 
 docker build --pull "$dir"
-docker image save "$(docker build -q "$dir")" | tar x -O --wildcards "*/layer.tar" | tar x -C "$dir"
+image="$(docker build -q "$dir")"
+
+get_file() {
+    docker image save -- "$image" | tar x -O -- "$(printf %s "$1" | tr : /)"
+}
+
+manifest="$(get_file index.json | jq -r .manifests[0].digest)"
+layer="$(get_file "blobs/$manifest" | jq -r .layers[0].digest)"
+get_file "blobs/$layer" | tar x -C "$dir"
