@@ -1,0 +1,6 @@
+#!/bin/bash
+
+printf '\033[18t'
+IFS=';' read -sdt _ rows cols
+set -x
+exec stty rows "$rows" cols "$cols"
