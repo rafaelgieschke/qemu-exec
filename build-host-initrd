@@ -1,0 +1,39 @@
+#!/bin/sh -eu
+dir="$(dirname -- "$(readlink -f "$0")")"
+tmpdir="$(mktemp -d)"
+
+init="$dir/init"
+commands="chroot modprobe switch_root poweroff"
+modules="9p 9p-virtio"
+
+prefixes() {
+  while [ "$1" != / ] && [ "$1" != . ]; do
+    printf '%s\n' "$1"
+    set -- "$(dirname -- "$1")"
+  done
+}
+
+find_commands() {
+  grep -Eo '(^|^#!|[;|&])\s*(\w|[[/])+($|[ ;|&])' -- "$@" | grep -Eo '(\w|[[/])+'
+}
+
+cp "$init" "$tmpdir/init"
+commands="$commands $(find_commands "$tmpdir/init")"
+
+printf '%s\n' $modules | install -D -m 0664 /dev/stdin "$tmpdir/etc/modules"
+
+(
+  cd -- "$tmpdir"
+  find .
+  modprobe -aD $modules | sed -E -e 's/^insmod //' -e 's/\s+$//'
+  printf '%s\n' "/lib/modules/$(uname -r)/modules".*
+  for command in $commands; do
+    file="$(command -v -- "$command" || :)"
+    case "$file" in /*) ;; *) continue ;; esac
+    printf '%s\n' "$file"
+    ldd "$file" | sed -En 's/^[^/]*(\/\S+).*$/\1/p'
+  done
+) | while read -r file; do prefixes "$file"; done |
+  sort | uniq | tee /dev/stderr | cpio -D "$tmpdir" -L -o -H newc >"$dir/initrd"
+
+ln -sf -- /boot/vmlinuz "$dir/kernel"
