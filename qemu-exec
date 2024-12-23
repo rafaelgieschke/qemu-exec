@@ -8,6 +8,7 @@ dir="$(dirname -- "$(readlink -f "$0")")"
 # https://www.qemu.org/docs/master/system/mux-chardev.html
 : "${serial=mon:stdio}"
 : "${cmdline="quiet${serial:+ console=ttyS0}"}"
+: "${setpath=1}"
 
 quote() {
   printf '%s\n' "$1" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/'/"
@@ -17,6 +18,9 @@ get_cmdline() {
   for arg; do shift && test "$arg" = "--" && break; done
   if test "$#" = "0"; then
     set -- "${SHELL:-sh}"
+  fi
+  if test "$setpath"; then
+    set -- env "PATH=$PATH" "$@"
   fi
   for arg; do
     case "$arg" in
