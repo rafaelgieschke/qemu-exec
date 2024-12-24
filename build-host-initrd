@@ -36,4 +36,9 @@ printf '%s\n' $modules | install -D -m 0664 /dev/stdin "$tmpdir/etc/modules"
 ) | while read -r file; do prefixes "$file"; done |
   sort | uniq | tee /dev/stderr | cpio -D "$tmpdir" -L -o -H newc >"$dir/initrd"
 
-ln -sf -- /boot/vmlinuz "$dir/kernel"
+for f in /boot/vmlinuz "/boot/vmlinuz-$(uname -r)"; do
+  if ! test -e "$f"; then
+    continue
+  fi
+  ln -sf -- "$f" "$dir/kernel"
+done
