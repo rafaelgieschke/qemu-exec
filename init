@@ -19,6 +19,16 @@ stty -onlcr
 
 while test "$1" != "=="; do shift; done
 shift
+
+nargs="$1"
+shift
+for arg; do
+  shift
+  if test "$((nargs -= 1))" -ge 0; then
+    set -- "$@" "$arg"
+  fi
+done
+
 poweroff_cmd="$1"
 shift
 

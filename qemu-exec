@@ -22,17 +22,21 @@ get_cmdline() {
   if test "$setpath"; then
     set -- env "PATH=$PATH" "$@"
   fi
+  set -- "$poweroff_cmd" "$working_dir" "$@"
   for arg; do
     case "$arg" in
     *\"*) return ;;
     esac
   done
-  if test "$(($# + 3))" -gt "$max_cmdline_args"; then return; fi
+  if test "$(($# + 2))" -gt "$max_cmdline_args"; then return; fi
   # Use == as delimiter to command-line parameters not recognized
   # by the kernel before the -- delimiter, which are also passed to init.
   # A potential == before the -- delimiter would be passed as environment
   # variable ("=") to init and can thus be distinguished.
-  set -- "${cmdline}-- ==$(printf ' "%s"' "$poweroff_cmd" "$working_dir" "$@")"
+  # Additionally, some firmware (e.g., OVMF) will append further options to
+  # the kernel command line. Therefore, add the number of passed arguments
+  # after the ==.
+  set -- "${cmdline}-- ==$(printf ' "%s"' "$#" "$@")"
   if test "$(printf "%s" "$1" | wc -c)" -gt "$max_cmdline_size"; then return; fi
   printf "%s\n" "$1"
 }
