@@ -1,4 +1,7 @@
 #!/bin/sh -eu
+
+: "${version:=$(uname -r)}"
+
 dir="$(dirname -- "$(readlink -f "$0")")"
 tmpdir="$(mktemp -d)"
 
@@ -25,8 +28,8 @@ printf '%s\n' $modules | install -D -m 0664 /dev/stdin "$tmpdir/etc/modules"
 (
   cd -- "$tmpdir"
   find .
-  modprobe -aD $modules | sed -E -e 's/^insmod //' -e 's/\s+$//'
-  printf '%s\n' "/lib/modules/$(uname -r)/modules".*
+  modprobe -S "$version" -aD $modules | grep -v ^builtin | sed -E -e 's/^insmod //' -e 's/\s+$//'
+  printf '%s\n' "/lib/modules/$version/modules".*
   for command in $commands; do
     file="$(command -v -- "$command" || :)"
     case "$file" in /*) ;; *) continue ;; esac
@@ -36,7 +39,7 @@ printf '%s\n' $modules | install -D -m 0664 /dev/stdin "$tmpdir/etc/modules"
 ) | while read -r file; do prefixes "$file"; done |
   sort | uniq | tee /dev/stderr | cpio -D "$tmpdir" -L -o -H newc >"$dir/initrd"
 
-for f in /boot/vmlinuz "/boot/vmlinuz-$(uname -r)"; do
+for f in "/boot/vmlinuz-$version" /boot/vmlinuz; do
   if ! test -e "$f"; then
     continue
   fi
