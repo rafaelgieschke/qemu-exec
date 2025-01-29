@@ -44,4 +44,5 @@ for f in "/boot/vmlinuz-$version" /boot/vmlinuz; do
     continue
   fi
   ln -sf -- "$f" "$dir/kernel"
+  break
 done
