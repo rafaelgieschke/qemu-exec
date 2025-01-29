@@ -7,7 +7,7 @@ tmpdir="$(mktemp -d)"
 
 init="$dir/init"
 commands="chroot modprobe switch_root poweroff"
-modules="9p 9p-virtio"
+modules="9p 9p-virtio virtio-pci"
 
 prefixes() {
   while [ "$1" != / ] && [ "$1" != . ]; do
