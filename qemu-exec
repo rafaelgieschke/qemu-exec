@@ -7,7 +7,7 @@ dir="$(dirname -- "$(readlink -f "$0")")"
 : "${initrd:="$dir/initrd"}"
 # https://www.qemu.org/docs/master/system/mux-chardev.html
 : "${serial=mon:stdio}"
-: "${cmdline="quiet${serial:+ console=ttyS0}"}"
+: "${cmdline="${quiet-quiet}${serial:+ console=ttyS0}"}"
 : "${setpath=1}"
 
 quote() {
