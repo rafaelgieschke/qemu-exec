@@ -51,7 +51,7 @@ get_script() {
 }
 
 if ! test -f "$dir/kernel" || ! test -f "$dir/initrd"; then
-  "$dir/build"
+  "$dir/build-host-initrd"
 fi
 
 poweroff_cmd="poweroff"
