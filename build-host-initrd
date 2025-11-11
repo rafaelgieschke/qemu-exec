@@ -1,6 +1,6 @@
 #!/bin/sh -eu
 
-: "${version:=$(uname -r)}"
+: "${version:=$(if test -e "/boot/vmlinuz-$(uname -r)"; then uname -r; else basename -- "$(realpath /boot/vmlinuz)" | sed 's/vmlinuz-//'; fi)}"
 
 dir="$(dirname -- "$(readlink -f "$0")")"
 tmpdir="$(mktemp -d)"
