@@ -14,6 +14,7 @@ mount -t devtmpfs devtmpfs /mnt/dev
 mount -t proc proc /mnt/proc
 mount -t sysfs sysfs /mnt/sys
 mount -t cgroup2 -o nsdelegate cgroup2 /mnt/sys/fs/cgroup
+echo 1 > /mnt/sys/class/net/lo/flags
 
 stty -onlcr
 
